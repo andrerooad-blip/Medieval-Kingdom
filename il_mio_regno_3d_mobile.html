@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Il Mio Regno — prototipo</title>
+<style>
+:root{--bg:#151b19;--panel:#202a25;--panel2:#29352e;--gold:#e6c477;--cream:#f3ead5;--muted:#b8c2b4;--green:#6e9b67;--red:#d87965}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#29382e,#111714 72%);color:var(--cream);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 22px;border-bottom:1px solid #435045;background:#17201bd9;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:12px}.crest{width:42px;height:48px;display:grid;place-items:center;background:linear-gradient(145deg,#d6b45e,#8f672d);clip-path:polygon(8% 0,92% 0,88% 72%,50% 100%,12% 72%);font-size:24px;color:#271e11}.brand h1{margin:0;font:700 20px Georgia,serif;letter-spacing:.3px}.brand small{color:var(--muted)}
+button{border:1px solid #62725e;background:#344638;color:var(--cream);padding:9px 12px;border-radius:9px;font-weight:650;cursor:pointer;transition:.15s}button:hover{filter:brightness(1.15);transform:translateY(-1px)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.reset{background:transparent;border-color:#526056}
+main{max-width:1440px;margin:auto;padding:18px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px}.world{position:relative;min-height:560px;border:1px solid #4b5d4c;border-radius:18px;overflow:hidden;background:#385b3e;box-shadow:0 16px 45px #0005}.worldtop{position:absolute;left:16px;top:14px;z-index:2;pointer-events:none;text-shadow:0 2px 8px #172019}.worldtop h2{margin:0;font:700 25px Georgia,serif}.worldtop p{margin:4px 0;color:#e0e9d7;font-size:13px}.pill{display:inline-block;margin-top:7px;padding:5px 9px;background:#17231ccc;border:1px solid #74846b;border-radius:99px;font-size:12px}
+#scene{display:block;width:100%;height:100%;min-height:560px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}#scene:active{cursor:grabbing}.hint{position:absolute;bottom:12px;left:14px;padding:7px 10px;background:#142019d9;border:1px solid #586a53;border-radius:9px;font-size:12px;color:#d6e1d1;max-width:calc(100% - 28px)}.zoomControls{position:absolute;right:10px;top:12px;z-index:3;display:flex;flex-direction:column;gap:6px}.zoomControls button{width:42px;height:42px;padding:0;font-size:22px;line-height:1;background:#142019e8;border-color:#7b8f6f;touch-action:manipulation}
+.sidebar{display:flex;flex-direction:column;gap:13px}.panel{background:linear-gradient(145deg,#26332b,#1d2722);border:1px solid #435345;border-radius:15px;padding:15px;box-shadow:0 10px 25px #0002}.panel h3{font:700 17px Georgia,serif;margin:0 0 12px;color:var(--gold)}.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#151e19;border:1px solid #39493b;border-radius:11px;padding:10px}.stat .label{font-size:12px;color:var(--muted)}.stat strong{display:block;font-size:21px;margin-top:3px;font-variant-numeric:tabular-nums}.stat em{font-size:11px;color:#a6c69a;font-style:normal}
+.progress{height:8px;background:#111914;border-radius:10px;overflow:hidden;margin:7px 0}.progress span{height:100%;display:block;background:linear-gradient(90deg,#729a5c,#d5bd70);width:0;transition:width .25s}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button{min-height:72px;text-align:left;background:#2c4031}.actions button span{display:block;font-size:12px;font-weight:400;color:#c1cfbf;margin-top:4px}.actions button b{font-size:14px}.actions .wide{grid-column:1/-1;min-height:52px;text-align:center}
+.feed{max-height:150px;overflow:auto;display:flex;flex-direction:column;gap:7px}.event{font-size:12px;color:#cbd5c6;border-left:2px solid #8d9f6e;padding:4px 0 4px 9px}.event:first-child{color:#f2e4bc}
+footer{max-width:1440px;margin:0 auto;padding:0 18px 20px;color:#8e9d8e;font-size:12px}
+.modal{position:fixed;inset:0;background:#0009;z-index:10;display:none;place-items:center;padding:18px}.modal.open{display:grid}.modalbox{width:min(440px,100%);background:#202b24;border:1px solid #6a7c5d;border-radius:16px;padding:20px;box-shadow:0 25px 80px #0008}.modalbox h2{font:700 24px Georgia,serif;color:var(--gold);margin:0 0 6px}.modalbox p{color:var(--muted);margin:0 0 14px}.modalbox input{width:100%;background:#111a15;color:var(--cream);border:1px solid #596957;border-radius:8px;padding:11px;margin:4px 0 12px;font:inherit}.modalbuttons{display:flex;gap:8px;justify-content:flex-end}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:10px}.world,#scene{min-height:450px}.sidebar{display:grid;grid-template-columns:1fr 1fr}.sidebar .widepanel{grid-column:1/-1}header{padding:12px}.brand h1{font-size:17px}}
+@media(max-width:540px){.sidebar{display:flex}.world,#scene{min-height:390px}.worldtop h2{font-size:21px}.brand small{display:none}.stats{grid-template-columns:1fr 1fr}.worldtop{left:12px;top:10px}.worldtop h2{font-size:20px}.worldtop p{font-size:11px}.hint{font-size:10px;max-width:90%;}.actions button{font-size:13px}.stat strong{font-size:19px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand"><div class="crest">♜</div><div><h1>Il Mio Regno</h1><small>Un piccolo regno, una grande storia</small></div></div>
+ <div style="display:flex;gap:8px"><button id="saveBtn" title="Salva i progressi">Salva</button><button class="reset" id="resetBtn">Nuova partita</button></div>
+</header>
+<main>
+ <section class="world">
+  <div class="worldtop"><h2 id="kingdomName">Valleverde</h2><p id="season">Primavera · Anno I</p><span class="pill" id="levelPill">Insediamento · Livello 1</span></div>
+  <canvas id="scene"></canvas>
+  <div class="hint">Trascina per ruotare · Pizzica/zoom per avvicinare · Tocca un edificio</div>
+ </section>
+ <aside class="sidebar">
+  <section class="panel"><h3>Le casse del regno</h3><div class="stats">
+   <div class="stat"><div class="label">💰 Oro</div><strong id="gold">120</strong><em id="goldRate">+0 / turno</em></div>
+   <div class="stat"><div class="label">🌲 Legname</div><strong id="wood">35</strong><em>Materiale da costruzione</em></div>
+   <div class="stat"><div class="label">🪨 Pietra</div><strong id="stone">20</strong><em>Per edifici robusti</em></div>
+   <div class="stat"><div class="label">🌾 Cibo</div><strong id="food">45</strong><em id="foodRate">Consumo: 0</em></div>
+   <div class="stat"><div class="label">👥 Popolazione</div><strong id="pop">8</strong><em id="housing">8 posti letto</em></div>
+   <div class="stat"><div class="label">😊 Felicità</div><strong id="happiness">76%</strong><em>Morale degli abitanti</em></div>
+  </div></section>
+  <section class="panel"><h3>Progresso del regno</h3><div style="display:flex;justify-content:space-between;font-size:12px"><span id="xpLabel">Reputazione</span><b id="xp">0 / 100</b></div><div class="progress"><span id="xpBar"></span></div><div style="font-size:12px;color:var(--muted)" id="nextGoal">Costruisci per far crescere il regno.</div></section>
+  <section class="panel"><h3>Costruisci</h3><div class="actions">
+   <button id="houseBtn"><b>🏠 Casa</b><span>30 oro · 8 legname</span></button>
+   <button id="farmBtn"><b>🌾 Fattoria</b><span>25 oro · 10 legname</span></button>
+   <button id="tavernBtn"><b>🍺 Locanda</b><span>45 oro · 12 legname</span></button>
+   <button id="lumberBtn"><b>🪓 Segheria</b><span>35 oro · 8 legname</span></button>
+   <button class="wide" id="endTurnBtn">🌙 Concludi il turno</button>
+  </div></section>
+  <section class="panel"><h3>Raccogli risorse</h3><div class="actions">
+   <button id="gatherWoodBtn"><b>🪓 Taglia legna</b><span>+6 legname</span></button>
+   <button id="gatherStoneBtn"><b>⛏️ Cava pietra</b><span>+4 pietra</span></button>
+   <button id="gatherFoodBtn" class="wide"><b>🌾 Raccogli cibo</b><span>+8 cibo</span></button>
+  </div><p style="font-size:12px;color:var(--muted);margin:10px 0 0">Ogni raccolta fa passare un turno: fattorie e botteghe possono produrre risorse e gli abitanti consumano cibo.</p></section>
+  <section class="panel widepanel"><h3>Cronache del regno</h3><div class="feed" id="feed"><div class="event">La prima bandiera sventola su Valleverde. Il regno attende le tue decisioni.</div></div></section>
+ </aside>
+</main>
+<footer>Prototipo giocabile locale · I progressi vengono salvati in questo browser. Nessun account e nessun dato inviato a un server.</footer>
+<div class="modal" id="modal"><div class="modalbox"><h2 id="modalTitle">Edificio</h2><p id="modalDesc"></p><label for="buildingName">Nome (facoltativo)</label><input id="buildingName" maxlength="30" placeholder="Es. Casa del mugnaio"><div class="modalbuttons"><button class="reset" id="closeModal">Chiudi</button><button id="nameBuilding">Assegna nome</button></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(() => {
+const $=id=>document.getElementById(id);
+const defaults={name:'Valleverde',gold:120,wood:35,stone:20,food:45,pop:8,happiness:76,xp:0,level:1,turn:1,houses:1,farms:0,taverns:0,lumbermills:0,buildings:[],log:['La prima bandiera sventola su Valleverde. Il regno attende le tue decisioni.']};
+let state={...defaults}; let scene,camera,renderer,world,raycaster,mouse,ground;let objects=[];let selected=null;let drag=false,down={x:0,y:0},rot=.72,zoom=17;let pointerMoved=false;
+function log(msg){state.log.unshift(msg);state.log=state.log.slice(0,12);renderLog()}
+function renderLog(){$('feed').innerHTML=state.log.map(x=>`<div class="event">${escapeHtml(x)}</div>`).join('')}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function init3D(){
+ const canvas=$('scene');scene=new THREE.Scene();scene.background=new THREE.Color('#6e9a79');scene.fog=new THREE.Fog('#6e9a79',25,48);
+ camera=new THREE.PerspectiveCamera(42,1,.1,100);renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ scene.add(new THREE.HemisphereLight(0xdcebd9,0x3a4b32,2.0));const sun=new THREE.DirectionalLight(0xffe2ae,3);sun.position.set(-8,14,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+ world=new THREE.Group();scene.add(world);raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();
+ const plane=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:'#668c55',roughness:1}));plane.rotation.x=-Math.PI/2;plane.position.y=-.15;plane.receiveShadow=true;plane.userData.ground=true;world.add(plane);
+ // rolling hills
+ for(let i=0;i<18;i++){let r=1.2+Math.random()*2.5;let h=.5+Math.random()*1.5;const hill=new THREE.Mesh(new THREE.SphereGeometry(r,16,10),new THREE.MeshStandardMaterial({color:['#72985b','#7ea564','#5e824d'][i%3],roughness:1}));hill.scale.y=.35;hill.position.set((Math.random()-.5)*31,-.3-h*.3,(Math.random()-.5)*27);hill.receiveShadow=true;hill.userData.decor=true;world.add(hill)}
+ // river
+ const river=new THREE.Mesh(new THREE.BoxGeometry(2.3,.03,30),new THREE.MeshStandardMaterial({color:'#5b9eae',roughness:.3,metalness:.1}));river.position.set(-8,-.05,0);river.rotation.y=.25;river.userData.decor=true;world.add(river);
+ // road strips
+ addRoad(0,0,0,24);addRoad(0,0,Math.PI/2,19);
+ // plaza
+ const plaza=new THREE.Mesh(new THREE.CylinderGeometry(3.5,3.5,.12,32),new THREE.MeshStandardMaterial({color:'#b9aa83',roughness:1}));plaza.position.set(0,.02,0);plaza.userData.decor=true;world.add(plaza);
+ // trees on outskirts
+ for(let i=0;i<45;i++){let x=(Math.random()-.5)*32,z=(Math.random()-.5)*28;if(Math.abs(x)<5&&Math.abs(z)<5)continue;if(x< -6&&x>-10)continue;addTree(x,z)}
+ addBuildingMesh({type:'castle',x:0,z:-7,name:'Castello di Valleverde'},true);
+ rebuildBuildings();resize();animate();
+ canvas.addEventListener('pointerdown',e=>{drag=true;pointerMoved=false;down={x:e.clientX,y:e.clientY,rot};canvas.setPointerCapture(e.pointerId)});
+ canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.abs(dx)+Math.abs(dy)>4)pointerMoved=true;rot=down.rot+dx*.008;camera.position.y=Math.max(6,Math.min(22, camera.position.y+dy*.025));updateCamera()});
+ canvas.addEventListener('pointerup',e=>{drag=false;if(!pointerMoved)pick(e)});
+ canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(10,Math.min(28,zoom+Math.sign(e.deltaY)*1.2));updateCamera()},{passive:false});
+ window.addEventListener('resize',resize);
+}
+function addRoad(x,z,angle,len){const m=new THREE.Mesh(new THREE.BoxGeometry(1,.035,len),new THREE.MeshStandardMaterial({color:'#a99772',roughness:1}));m.position.set(x,.01,z);m.rotation.y=angle;m.userData.decor=true;world.add(m)}
+function addTree(x,z){const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,.8,7),new THREE.MeshStandardMaterial({color:'#65452b'}));trunk.position.y=.35;trunk.castShadow=true;g.add(trunk);for(let i=0;i<3;i++){const cone=new THREE.Mesh(new THREE.ConeGeometry(.65-i*.1,1.1,7),new THREE.MeshStandardMaterial({color:['#315b3b','#3f7045','#477c49'][i],roughness:1}));cone.position.y=.85+i*.42;cone.castShadow=true;g.add(cone)}g.position.set(x,0,z);g.userData.decor=true;world.add(g)}
+function mat(color){return new THREE.MeshStandardMaterial({color,roughness:.85})}
+function addBuildingMesh(b,isCastle=false){
+ const g=new THREE.Group();let base,roof;
+ if(isCastle||b.type==='castle'){
+  base=new THREE.Mesh(new THREE.BoxGeometry(3.3,2.2,2.8),mat('#b9b7a4'));base.position.y=1.1;base.castShadow=true;base.receiveShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.35,1.35,4),mat('#596b70'));roof.position.set(0,2.85,0);roof.rotation.y=Math.PI/4;roof.castShadow=true;g.add(roof);
+  for(const [x,z] of [[-1.4,-1.1],[1.4,-1.1],[-1.4,1.1],[1.4,1.1]]){const t=new THREE.Mesh(new THREE.BoxGeometry(.65,3,.65),mat('#c8c5ae'));t.position.set(x,1.5,z);t.castShadow=true;g.add(t);const tr=new THREE.Mesh(new THREE.ConeGeometry(.5,.8,4),mat('#6c3d35'));tr.position.set(x,3.4,z);tr.rotation.y=Math.PI/4;g.add(tr)}
+ } else if(b.type==='farm'){
+  base=new THREE.Mesh(new THREE.BoxGeometry(2.3,1.25,1.8),mat('#b78b56'));base.position.y=.65;base.castShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.65,1.15,4),mat('#8e5c38'));roof.position.y=1.75;roof.rotation.y=Math.PI/4;roof.scale.set(1,.8,.8);g.add(roof);
+  for(let i=0;i<4;i++){const row=new THREE.Mesh(new THREE.BoxGeometry(.28,.08,3),mat('#9ab65c'));row.position.set(-1.7+i*.4,.04,2.1);g.add(row)}
+ } else if(b.type==='tavern'){
+  base=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.55,1.9),mat('#b98a5a'));base.position.y=.78;base.castShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.8,1.2,4),mat('#6c3830'));roof.position.y=1.95;roof.rotation.y=Math.PI/4;roof.scale.set(1,.8,.75);g.add(roof);
+  const sign=new THREE.Mesh(new THREE.BoxGeometry(.55,.35,.06),mat('#e3c779'));sign.position.set(0,1.05,1);g.add(sign);
+ } else if(b.type==='lumber'){
+  base=new THREE.Mesh(new THREE.BoxGeometry(2.3,1.2,1.8),mat('#8c6544'));base.position.y=.6;base.castShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.7,1.1,4),mat('#56664b'));roof.position.y=1.65;roof.rotation.y=Math.PI/4;roof.scale.set(1,.8,.8);g.add(roof);
+  for(let i=0;i<3;i++){const logm=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1.4,8),mat('#8b5c35'));logm.rotation.z=Math.PI/2;logm.position.set(1.3,.18+i*.18,1);g.add(logm)}
+ } else {
+  base=new THREE.Mesh(new THREE.BoxGeometry(1.8,1.35,1.6),mat('#d1b58a'));base.position.y=.68;base.castShadow=true;base.receiveShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.45,1.15,4),mat(['#8b4e3c','#586b50','#66517c','#9b713b'][b.variant%4]));roof.position.y=1.9;roof.rotation.y=Math.PI/4;roof.scale.set(1,.85,.8);roof.castShadow=true;g.add(roof);
+ }
+ // door and windows
+ const door=new THREE.Mesh(new THREE.BoxGeometry(.32,.62,.07),mat('#53372a'));door.position.set(.15,.34,base.geometry.parameters.depth/2+.045);g.add(door);
+ for(const x of [-.48,.48]){const win=new THREE.Mesh(new THREE.BoxGeometry(.22,.24,.06),mat('#6c9ca1'));win.position.set(x,.92,base.geometry.parameters.depth/2+.05);g.add(win)}
+ g.position.set(b.x,0,b.z);g.userData.building=b;g.userData.decor=false;world.add(g);objects.push(g);return g;
+}
+function rebuildBuildings(){objects.forEach(o=>world.remove(o));objects=[];state.buildings.forEach(b=>addBuildingMesh(b));updateCamera()}
+function updateCamera(){if(!camera)return;camera.position.set(Math.sin(rot)*zoom,Math.max(7,camera.position.y||10),Math.cos(rot)*zoom);camera.lookAt(0,0,0)}
+function resize(){if(!renderer)return;const c=$('scene'),w=c.clientWidth,h=c.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();updateCamera()}
+function animate(){requestAnimationFrame(animate);if(renderer&&scene)renderer.render(scene,camera)}
+function pick(e){const rect=$('scene').getBoundingClientRect();mouse.x=((e.clientX-rect.left)/rect.width)*2-1;mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(objects,true);if(hits.length){let o=hits[0].object;while(o.parent&&!o.userData.building)o=o.parent;if(o.userData.building)showBuilding(o.userData.building)}}
+function showBuilding(b){selected=b;$('modalTitle').textContent=b.name||typeName(b.type);$('modalDesc').textContent=b.type==='castle'?'Il cuore del tuo regno. Qui si prendono le decisioni più importanti.':`${typeName(b.type)} · Posizione: ${Math.round(b.x)}, ${Math.round(b.z)}. Ogni edificio contribuisce alla vita del regno.`;$('buildingName').value=b.name||'';$('modal').classList.add('open')}
+function typeName(t){return ({house:'Casa',farm:'Fattoria',tavern:'Locanda',lumber:'Segheria',castle:'Castello'})[t]||'Edificio'}
+function render(){
+ for(const k of ['gold','wood','stone','food','pop','happiness'])$(k).textContent=state[k].toLocaleString('it-IT');
+ $('goldRate').textContent=`+${state.farms*2+state.taverns*5+state.lumbermills*2} / turno`;
+ $('foodRate').textContent=`Consumo: ${state.pop} / turno`;
+ $('housing').textContent=`${state.houses*4+4} posti letto`;
+ $('xp').textContent=`${state.xp} / ${state.level*100}`;$('xpBar').style.width=Math.min(100,state.xp/(state.level*100)*100)+'%';
+ $('levelPill').textContent=`${levelName()} · Livello ${state.level}`;$('season').textContent=`${['Primavera','Estate','Autunno','Inverno'][(state.turn-1)%4]} · Anno ${Math.floor((state.turn-1)/4)+1}`;
+ $('nextGoal').textContent=state.xp>=state.level*100?'Un nuovo livello ti aspetta: concludi un turno!':`Mancano ${state.level*100-state.xp} punti reputazione al prossimo livello.`;
+ $('houseBtn').disabled=state.gold<30||state.wood<8||state.pop>=state.houses*4+4;
+ $('farmBtn').disabled=state.gold<25||state.wood<10;$('tavernBtn').disabled=state.gold<45||state.wood<12;$('lumberBtn').disabled=state.gold<35||state.wood<8;
+}
+function levelName(){return ['','Insediamento','Borgo','Villaggio fortificato','Cittadina','Città','Capitale'][Math.min(state.level,6)]||'Regno leggendario'}
+function build(type){
+ const costs={house:[30,8,0],farm:[25,10,0],tavern:[45,12,0],lumber:[35,8,0]}[type];
+ if(state.gold<costs[0]||state.wood<costs[1]||state.stone<costs[2])return;
+ if(type==='house'&&state.pop>=state.houses*4+4){log('Non ci sono letti liberi: costruisci una casa.');return}
+ state.gold-=costs[0];state.wood-=costs[1];state.stone-=costs[2];
+ const counts={house:state.houses-1,farm:state.farms,tavern:state.taverns,lumber:state.lumbermills};const idx=counts[type]||0;
+ const positions=spiralPosition(state.buildings.length);
+ const b={type,x:positions.x,z:positions.z,name:'',variant:Math.floor(Math.random()*4)};
+ state.buildings.push(b);
+ if(type==='house')state.houses++;if(type==='farm')state.farms++;if(type==='tavern')state.taverns++;if(type==='lumber')state.lumbermills++;
+ state.xp+=20;addBuildingMesh(b);log(`${typeName(type)} costruita. Il regno fa un passo avanti!`);checkLevel();render();save(false)
+}
+function spiralPosition(n){const a=n*2.399963;const r=4.5+Math.sqrt(n+1)*1.65;return{x:Math.cos(a)*r,z:Math.sin(a)*r+1}}
+function checkLevel(){while(state.xp>=state.level*100){state.xp-=state.level*100;state.level++;state.gold+=35;state.happiness=Math.min(100,state.happiness+3);log(`🎉 Il regno è cresciuto: ${levelName()}! La corona concede 35 monete.`)}}
+function endTurn(){
+ state.turn++;const income=state.farms*2+state.taverns*5+state.lumbermills*2;state.gold+=income;state.food+=state.farms*8-state.pop;state.wood+=state.lumbermills*4;
+ if(state.food<0){state.happiness=Math.max(10,state.happiness-8);state.food=0;log('Le dispense sono vuote. La felicità degli abitanti diminuisce.')}else{state.happiness=Math.min(100,state.happiness+1)}
+ if(state.food>100)state.food=100;if(state.wood>150)state.wood=150;
+ if(state.turn%3===0&&state.pop<state.houses*4+4&&state.food>=10&&state.happiness>=55){state.pop++;state.food-=5;log('Una nuova famiglia si è stabilita a Valleverde. La popolazione cresce!')}
+ state.xp+=8+state.farms*2+state.taverns*2;checkLevel();log(`È iniziato un nuovo turno. Entrate: ${income} oro, raccolto netto: ${state.farms*8-state.pop} cibo.`);render();save(false)
+}
+function gatherResource(kind){
+ const rewards={wood:{amount:6,key:'wood',label:'Hai raccolto 6 unità di legname.'},stone:{amount:4,key:'stone',label:'Hai estratto 4 unità di pietra.'},food:{amount:8,key:'food',label:'Hai raccolto 8 unità di cibo.'}};
+ const r=rewards[kind];if(!r)return;
+ state[r.key]+=r.amount;
+ if(kind==='wood'&&state.wood>150)state.wood=150;
+ if(kind==='stone'&&state.stone>150)state.stone=150;
+ if(kind==='food'&&state.food>150)state.food=150;
+ log(r.label);
+ endTurn();
+}
+function save(show=true){try{localStorage.setItem('ilMioRegnoSave',JSON.stringify(state));if(show){$('saveBtn').textContent='Salvato ✓';setTimeout(()=>$('saveBtn').textContent='Salva',1200);log('I progressi del regno sono stati salvati in questo browser.')}}catch(e){if(show)alert('Non è stato possibile salvare in questo browser.')}}
+function load(){try{const s=localStorage.getItem('ilMioRegnoSave');if(s)state={...defaults,...JSON.parse(s)}}catch(e){state={...defaults}}}
+function reset(){if(!confirm('Vuoi iniziare una nuova partita? I progressi salvati in questo browser verranno cancellati.'))return;localStorage.removeItem('ilMioRegnoSave');state={...defaults,buildings:[],log:[defaults.log[0]]};state.buildings=[];rebuildBuildings();render();renderLog();save(false)}
+$('zoomIn').onclick=()=>{zoom=Math.max(10,zoom-1.8);updateCamera()};$('zoomOut').onclick=()=>{zoom=Math.min(28,zoom+1.8);updateCamera()};$('houseBtn').onclick=()=>build('house');$('farmBtn').onclick=()=>build('farm');$('tavernBtn').onclick=()=>build('tavern');$('lumberBtn').onclick=()=>build('lumber');$('endTurnBtn').onclick=endTurn;$('gatherWoodBtn').onclick=()=>gatherResource('wood');$('gatherStoneBtn').onclick=()=>gatherResource('stone');$('gatherFoodBtn').onclick=()=>gatherResource('food');$('saveBtn').onclick=()=>save(true);$('resetBtn').onclick=reset;
+$('closeModal').onclick=()=>$('modal').classList.remove('open');$('modal').onclick=e=>{if(e.target===$('modal'))$('modal').classList.remove('open')};
+$('nameBuilding').onclick=()=>{if(!selected)return;const name=$('buildingName').value.trim();selected.name=name||typeName(selected.type);const o=objects.find(o=>o.userData.building===selected);if(o)o.userData.building.name=selected.name;log(`Hai dato un nome a un edificio: ${selected.name}.`);$('modalTitle').textContent=selected.name;$('modal').classList.remove('open');save(false)};
+load();if(!state.buildings)state.buildings=[];init3D();render();renderLog();
+})();
+</script>
+</body></html>
