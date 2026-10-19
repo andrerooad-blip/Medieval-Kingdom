@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Il Mio Regno — prototipo</title>
+<title>Medieval-Kingdom — prototipo</title>
 <style>
 :root{--bg:#151b19;--panel:#202a25;--panel2:#29352e;--gold:#e6c477;--cream:#f3ead5;--muted:#b8c2b4;--green:#6e9b67;--red:#d87965}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#29382e,#111714 72%);color:var(--cream);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
@@ -11,7 +11,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
 .brand{display:flex;align-items:center;gap:12px}.crest{width:42px;height:48px;display:grid;place-items:center;background:linear-gradient(145deg,#d6b45e,#8f672d);clip-path:polygon(8% 0,92% 0,88% 72%,50% 100%,12% 72%);font-size:24px;color:#271e11}.brand h1{margin:0;font:700 20px Georgia,serif;letter-spacing:.3px}.brand small{color:var(--muted)}
 button{border:1px solid #62725e;background:#344638;color:var(--cream);padding:9px 12px;border-radius:9px;font-weight:650;cursor:pointer;transition:.15s}button:hover{filter:brightness(1.15);transform:translateY(-1px)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.reset{background:transparent;border-color:#526056}
 main{max-width:1440px;margin:auto;padding:18px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px}.world{position:relative;min-height:560px;border:1px solid #4b5d4c;border-radius:18px;overflow:hidden;background:#385b3e;box-shadow:0 16px 45px #0005}.worldtop{position:absolute;left:16px;top:14px;z-index:2;pointer-events:none;text-shadow:0 2px 8px #172019}.worldtop h2{margin:0;font:700 25px Georgia,serif}.worldtop p{margin:4px 0;color:#e0e9d7;font-size:13px}.pill{display:inline-block;margin-top:7px;padding:5px 9px;background:#17231ccc;border:1px solid #74846b;border-radius:99px;font-size:12px}
-#scene{display:block;width:100%;height:100%;min-height:560px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}#scene:active{cursor:grabbing}.hint{position:absolute;bottom:12px;left:14px;padding:7px 10px;background:#142019d9;border:1px solid #586a53;border-radius:9px;font-size:12px;color:#d6e1d1;max-width:calc(100% - 28px)}.zoomControls{position:absolute;right:10px;top:12px;z-index:3;display:flex;flex-direction:column;gap:6px}.zoomControls button{width:42px;height:42px;padding:0;font-size:22px;line-height:1;background:#142019e8;border-color:#7b8f6f;touch-action:manipulation}
+#scene{display:block;width:100%;height:100%;min-height:560px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}.sceneError{position:absolute;inset:90px 16px 65px;z-index:2;display:none;align-items:center;justify-content:center;text-align:center;padding:20px;background:#142019eF;border:1px solid #9b8050;border-radius:14px;color:#f3ead5;white-space:pre-wrap}.sceneError.show{display:flex}#scene:active{cursor:grabbing}.hint{position:absolute;bottom:12px;left:14px;padding:7px 10px;background:#142019d9;border:1px solid #586a53;border-radius:9px;font-size:12px;color:#d6e1d1;max-width:calc(100% - 28px)}.zoomControls{position:absolute;right:10px;top:12px;z-index:3;display:flex;flex-direction:column;gap:6px}.zoomControls button{width:42px;height:42px;padding:0;font-size:22px;line-height:1;background:#142019e8;border-color:#7b8f6f;touch-action:manipulation}
 .sidebar{display:flex;flex-direction:column;gap:13px}.panel{background:linear-gradient(145deg,#26332b,#1d2722);border:1px solid #435345;border-radius:15px;padding:15px;box-shadow:0 10px 25px #0002}.panel h3{font:700 17px Georgia,serif;margin:0 0 12px;color:var(--gold)}.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#151e19;border:1px solid #39493b;border-radius:11px;padding:10px}.stat .label{font-size:12px;color:var(--muted)}.stat strong{display:block;font-size:21px;margin-top:3px;font-variant-numeric:tabular-nums}.stat em{font-size:11px;color:#a6c69a;font-style:normal}
 .progress{height:8px;background:#111914;border-radius:10px;overflow:hidden;margin:7px 0}.progress span{height:100%;display:block;background:linear-gradient(90deg,#729a5c,#d5bd70);width:0;transition:width .25s}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button{min-height:72px;text-align:left;background:#2c4031}.actions button span{display:block;font-size:12px;font-weight:400;color:#c1cfbf;margin-top:4px}.actions button b{font-size:14px}.actions .wide{grid-column:1/-1;min-height:52px;text-align:center}
@@ -30,7 +30,8 @@ footer{max-width:1440px;margin:0 auto;padding:0 18px 20px;color:#8e9d8e;font-siz
 <main>
  <section class="world">
   <div class="worldtop"><h2 id="kingdomName">Valleverde</h2><p id="season">Primavera · Anno I</p><span class="pill" id="levelPill">Insediamento · Livello 1</span></div>
-  <canvas id="scene"></canvas>
+  <canvas id="scene"></canvas><div id="sceneError" class="sceneError" role="status"></div>
+  <div class="zoomControls" aria-label="Controlli zoom"><button id="zoomIn" type="button" aria-label="Avvicina">+</button><button id="zoomOut" type="button" aria-label="Allontana">−</button></div>
   <div class="hint">Trascina per ruotare · Pizzica/zoom per avvicinare · Tocca un edificio</div>
  </section>
  <aside class="sidebar">
@@ -60,7 +61,7 @@ footer{max-width:1440px;margin:0 auto;padding:0 18px 20px;color:#8e9d8e;font-siz
 </main>
 <footer>Prototipo giocabile locale · I progressi vengono salvati in questo browser. Nessun account e nessun dato inviato a un server.</footer>
 <div class="modal" id="modal"><div class="modalbox"><h2 id="modalTitle">Edificio</h2><p id="modalDesc"></p><label for="buildingName">Nome (facoltativo)</label><input id="buildingName" maxlength="30" placeholder="Es. Casa del mugnaio"><div class="modalbuttons"><button class="reset" id="closeModal">Chiudi</button><button id="nameBuilding">Assegna nome</button></div></div></div>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/three@0.160.0/build/three.min.js'"></script>
 <script>
 (() => {
 const $=id=>document.getElementById(id);
@@ -69,8 +70,11 @@ let state={...defaults}; let scene,camera,renderer,world,raycaster,mouse,ground;
 function log(msg){state.log.unshift(msg);state.log=state.log.slice(0,12);renderLog()}
 function renderLog(){$('feed').innerHTML=state.log.map(x=>`<div class="event">${escapeHtml(x)}</div>`).join('')}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function show3DError(message){const box=$('sceneError');if(box){box.textContent=message+'\n\nI pulsanti delle risorse e delle costruzioni restano disponibili, ma la scena 3D non è partita.';box.classList.add('show');}}
 function init3D(){
- const canvas=$('scene');scene=new THREE.Scene();scene.background=new THREE.Color('#6e9a79');scene.fog=new THREE.Fog('#6e9a79',25,48);
+ const canvas=$('scene');
+ if(typeof THREE==='undefined'){ show3DError('Il motore 3D non è stato caricato.\nControlla la connessione internet e ricarica la pagina.'); return; }
+ scene=new THREE.Scene();scene.background=new THREE.Color('#6e9a79');scene.fog=new THREE.Fog('#6e9a79',25,48);
  camera=new THREE.PerspectiveCamera(42,1,.1,100);renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  scene.add(new THREE.HemisphereLight(0xdcebd9,0x3a4b32,2.0));const sun=new THREE.DirectionalLight(0xffe2ae,3);sun.position.set(-8,14,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
  world=new THREE.Group();scene.add(world);raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();
@@ -123,7 +127,7 @@ function addBuildingMesh(b,isCastle=false){
  for(const x of [-.48,.48]){const win=new THREE.Mesh(new THREE.BoxGeometry(.22,.24,.06),mat('#6c9ca1'));win.position.set(x,.92,base.geometry.parameters.depth/2+.05);g.add(win)}
  g.position.set(b.x,0,b.z);g.userData.building=b;g.userData.decor=false;world.add(g);objects.push(g);return g;
 }
-function rebuildBuildings(){objects.forEach(o=>world.remove(o));objects=[];state.buildings.forEach(b=>addBuildingMesh(b));updateCamera()}
+function rebuildBuildings(){objects.forEach(o=>{if(world)world.remove(o)});objects=[];if(world)state.buildings.forEach(b=>addBuildingMesh(b));updateCamera()}
 function updateCamera(){if(!camera)return;camera.position.set(Math.sin(rot)*zoom,Math.max(7,camera.position.y||10),Math.cos(rot)*zoom);camera.lookAt(0,0,0)}
 function resize(){if(!renderer)return;const c=$('scene'),w=c.clientWidth,h=c.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();updateCamera()}
 function animate(){requestAnimationFrame(animate);if(renderer&&scene)renderer.render(scene,camera)}
@@ -152,7 +156,7 @@ function build(type){
  const b={type,x:positions.x,z:positions.z,name:'',variant:Math.floor(Math.random()*4)};
  state.buildings.push(b);
  if(type==='house')state.houses++;if(type==='farm')state.farms++;if(type==='tavern')state.taverns++;if(type==='lumber')state.lumbermills++;
- state.xp+=20;addBuildingMesh(b);log(`${typeName(type)} costruita. Il regno fa un passo avanti!`);checkLevel();render();save(false)
+ state.xp+=20;if(world)addBuildingMesh(b);log(`${typeName(type)} costruita. Il regno fa un passo avanti!`);checkLevel();render();save(false)
 }
 function spiralPosition(n){const a=n*2.399963;const r=4.5+Math.sqrt(n+1)*1.65;return{x:Math.cos(a)*r,z:Math.sin(a)*r+1}}
 function checkLevel(){while(state.xp>=state.level*100){state.xp-=state.level*100;state.level++;state.gold+=35;state.happiness=Math.min(100,state.happiness+3);log(`🎉 Il regno è cresciuto: ${levelName()}! La corona concede 35 monete.`)}}
@@ -179,7 +183,7 @@ function reset(){if(!confirm('Vuoi iniziare una nuova partita? I progressi salva
 $('zoomIn').onclick=()=>{zoom=Math.max(10,zoom-1.8);updateCamera()};$('zoomOut').onclick=()=>{zoom=Math.min(28,zoom+1.8);updateCamera()};$('houseBtn').onclick=()=>build('house');$('farmBtn').onclick=()=>build('farm');$('tavernBtn').onclick=()=>build('tavern');$('lumberBtn').onclick=()=>build('lumber');$('endTurnBtn').onclick=endTurn;$('gatherWoodBtn').onclick=()=>gatherResource('wood');$('gatherStoneBtn').onclick=()=>gatherResource('stone');$('gatherFoodBtn').onclick=()=>gatherResource('food');$('saveBtn').onclick=()=>save(true);$('resetBtn').onclick=reset;
 $('closeModal').onclick=()=>$('modal').classList.remove('open');$('modal').onclick=e=>{if(e.target===$('modal'))$('modal').classList.remove('open')};
 $('nameBuilding').onclick=()=>{if(!selected)return;const name=$('buildingName').value.trim();selected.name=name||typeName(selected.type);const o=objects.find(o=>o.userData.building===selected);if(o)o.userData.building.name=selected.name;log(`Hai dato un nome a un edificio: ${selected.name}.`);$('modalTitle').textContent=selected.name;$('modal').classList.remove('open');save(false)};
-load();if(!state.buildings)state.buildings=[];init3D();render();renderLog();
+load();if(!state.buildings)state.buildings=[];render();renderLog();try{init3D()}catch(e){show3DError('Errore durante l’avvio 3D: '+(e&&e.message?e.message:String(e)));}
 })();
 </script>
 </body></html>
