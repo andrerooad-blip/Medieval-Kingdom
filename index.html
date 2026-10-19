@@ -32,7 +32,7 @@ footer{max-width:1440px;margin:0 auto;padding:0 18px 20px;color:#8e9d8e;font-siz
   <div class="worldtop"><h2 id="kingdomName">Valleverde</h2><p id="season">Primavera · Anno I</p><p id="gameClock">19 ottobre 1128 · Mattina</p><span class="pill" id="levelPill">Insediamento · Livello 1</span></div>
   <canvas id="scene"></canvas><div id="sceneError" class="sceneError" role="status"></div><div id="buildStatus" class="buildStatus" role="status"></div>
   <div class="zoomControls" aria-label="Controlli zoom"><button id="zoomIn" type="button" aria-label="Avvicina">+</button><button id="zoomOut" type="button" aria-label="Allontana">−</button></div>
-  <div class="hint">Trascina per ruotare · Pizzica/zoom per avvicinare · Tocca un edificio</div>
+  <div class="hint">Un dito: ruota · Due dita: zoom · Tieni premuto un edificio/albero per spostarlo · Tocca un albero per tagliarlo</div>
  </section>
  <aside class="sidebar">
   <section class="panel"><h3>Le casse del regno</h3><div class="stats">
@@ -66,7 +66,7 @@ footer{max-width:1440px;margin:0 auto;padding:0 18px 20px;color:#8e9d8e;font-siz
 (() => {
 const $=id=>document.getElementById(id);
 const defaults={name:'Valleverde',gold:120,wood:35,stone:20,food:45,pop:8,happiness:76,xp:0,level:1,turn:1,houses:1,farms:0,taverns:0,lumbermills:0,buildings:[],roads:[],gatherUsed:{wood:0,stone:0,food:0},mapRadius:13,log:['La prima bandiera sventola su Valleverde. Il regno attende le tue decisioni.']};
-let state={...defaults,royalLevel:1}; let scene,camera,renderer,world,raycaster,mouse,ground,wallGroup,terrainGroup,riverMesh;let objects=[];let selected=null;let drag=false,down={x:0,y:0,rot:.72},rot=.72,zoom=25;let pointerMoved=false;let pendingBuild=null;const activeGathers={wood:null,stone:null,food:null};const gatherIntervals={wood:null,stone:null,food:null};const gatherTimers={wood:0,stone:0,food:0};let daySeconds=0,clockInterval=null;const DAY_LENGTH=240,EVENING_START=190;let gameDate={day:19,month:10,year:1128};
+let state={...defaults,royalLevel:1}; let scene,camera,renderer,world,raycaster,mouse,ground,wallGroup,terrainGroup,riverMesh;let objects=[];let selected=null;let drag=false,down={x:0,y:0,rot:.72},rot=.72,zoom=25;let pointerMoved=false;let pendingBuild=null;let pointers=new Map();let pinchStart=0;let holdTimer=null;let holdCandidate=null;let movingObject=null;let moveOffset={x:0,z:0};let movedTree=false;let cameraGesture=false;const activeGathers={wood:null,stone:null,food:null};const gatherIntervals={wood:null,stone:null,food:null};const gatherTimers={wood:0,stone:0,food:0};let daySeconds=0,clockInterval=null;const DAY_LENGTH=240,EVENING_START=190;let gameDate={day:19,month:10,year:1128};
 function log(msg){state.log.unshift(msg);state.log=state.log.slice(0,12);renderLog()}
 function renderLog(){$('feed').innerHTML=state.log.map(x=>`<div class="event">${escapeHtml(x)}</div>`).join('')}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -101,9 +101,22 @@ function init3D(){
  addBuildingMesh({type:'castle',x:0,z:-7,name:'Castello di Valleverde'},true);
  addBuildingMesh({type:'royal',x:0,z:0,name:'Casa del Re',level:state.royalLevel||1});
  rebuildBuildings();resize();animate();
- canvas.addEventListener('pointerdown',e=>{drag=true;pointerMoved=false;down={x:e.clientX,y:e.clientY,rot};canvas.setPointerCapture(e.pointerId)});
- canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.abs(dx)+Math.abs(dy)>4)pointerMoved=true;rot=down.rot+dx*.008;camera.position.y=Math.max(6,Math.min(22, camera.position.y+dy*.025));updateCamera()});
- canvas.addEventListener('pointerup',e=>{drag=false;if(!pointerMoved)pick(e)});
+ // Controlli touch: un dito ruota la visuale, due dita regolano soltanto lo zoom.
+ canvas.addEventListener('pointerdown',e=>{
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);
+  if(pointers.size===2){clearTimeout(holdTimer);holdTimer=null;movingObject=null;const a=[...pointers.values()];pinchStart=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);cameraGesture=true;drag=false;return}
+  drag=true;pointerMoved=false;cameraGesture=false;down={x:e.clientX,y:e.clientY,rot};holdCandidate=objectAt(e.clientX,e.clientY);clearTimeout(holdTimer);
+  if(holdCandidate&&holdCandidate.userData.tree||holdCandidate&&holdCandidate.userData.building){holdTimer=setTimeout(()=>{movingObject=holdCandidate;if(movingObject.userData.building){movingObject.userData.building._oldX=movingObject.userData.building.x;movingObject.userData.building._oldZ=movingObject.userData.building.z}const gp=groundPoint(e.clientX,e.clientY);if(gp){moveOffset.x=gp.x-movingObject.position.x;moveOffset.z=gp.z-movingObject.position.z}pointerMoved=true;log(holdCandidate.userData.tree?'Albero selezionato: trascinalo per spostarlo.':'Edificio selezionato: trascinalo per spostarlo.');},520)}
+ });
+ canvas.addEventListener('pointermove',e=>{
+  if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size>=2){const a=[...pointers.values()];const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(pinchStart>0){zoom=Math.max(11,Math.min(42,zoom+(pinchStart-d)*.035));updateCamera()}pinchStart=d;cameraGesture=true;return}
+  if(!drag)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.abs(dx)+Math.abs(dy)>5){pointerMoved=true;clearTimeout(holdTimer)}
+  if(movingObject){const pt=groundPoint(e.clientX,e.clientY);if(pt){let x=pt.x-moveOffset.x,z=pt.z-moveOffset.z;if(movingObject.userData.building){x=Math.max(-(state.mapRadius-1),Math.min(state.mapRadius-1,x));z=Math.max(-(state.mapRadius-1),Math.min(state.mapRadius-1,z));movingObject.position.set(x,0,z);movingObject.userData.building.x=x;movingObject.userData.building.z=z}else{movingObject.position.set(x,0,z);movedTree=true}}return}
+  rot=down.rot+dx*.008;updateCamera();
+ });
+ const finishPointer=e=>{clearTimeout(holdTimer);holdTimer=null;if(pointers.size<=1&&!movingObject&&!cameraGesture&&!pointerMoved)pick(e);if(movingObject){const obj=movingObject;if(obj.userData.building){const b=obj.userData.building;const invalid=Math.hypot(b.x,b.z)<4.4||Math.hypot(b.x,b.z+7)<3.2||(state.buildings||[]).some(other=>other!==b&&Math.hypot(other.x-b.x,other.z-b.z)<2.8);if(invalid){b.x=b._oldX??b.x;b.z=b._oldZ??b.z;obj.position.set(b.x,0,b.z);log('Posizione non valida: prova a lasciare più spazio agli altri edifici.')}else{log('Edificio spostato.');save(false)}}else if(obj.userData.tree){log('Albero spostato.')}movingObject=null;render();}pointers.delete(e.pointerId);if(pointers.size<2){pinchStart=0;cameraGesture=false;drag=false;holdCandidate=null;pointerMoved=false;}};
+ canvas.addEventListener('pointerup',finishPointer);canvas.addEventListener('pointercancel',finishPointer);
  canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(11,Math.min(42,zoom+Math.sign(e.deltaY)*1.8));updateCamera()},{passive:false});
  window.addEventListener('resize',resize);
 }
@@ -114,7 +127,7 @@ function drawWalls(radius){
 }
 function addRoad(x,z,angle=0,len=1.2,persistent=false){const m=new THREE.Mesh(new THREE.BoxGeometry(1.2,.04,len),new THREE.MeshStandardMaterial({color:'#a99772',roughness:1}));m.position.set(x,.015,z);m.rotation.y=angle;m.userData.decor=true;m.userData.road=persistent;world.add(m);return m}
 function rebuildRoads(){if(!world)return;world.children.filter(o=>o.userData&&o.userData.road===true).forEach(o=>world.remove(o));(state.roads||[]).forEach(r=>addRoad(r.x,r.z,r.angle||0,1.2,true))}
-function addTree(x,z){const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,.8,7),new THREE.MeshStandardMaterial({color:'#65452b'}));trunk.position.y=.35;trunk.castShadow=true;g.add(trunk);for(let i=0;i<3;i++){const cone=new THREE.Mesh(new THREE.ConeGeometry(.65-i*.1,1.1,7),new THREE.MeshStandardMaterial({color:['#315b3b','#3f7045','#477c49'][i],roughness:1}));cone.position.y=.85+i*.42;cone.castShadow=true;g.add(cone)}g.position.set(x,0,z);g.userData.decor=true;world.add(g)}
+function addTree(x,z){const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,.8,7),new THREE.MeshStandardMaterial({color:'#65452b'}));trunk.position.y=.35;trunk.castShadow=true;g.add(trunk);for(let i=0;i<3;i++){const cone=new THREE.Mesh(new THREE.ConeGeometry(.65-i*.1,1.1,7),new THREE.MeshStandardMaterial({color:['#315b3b','#3f7045','#477c49'][i],roughness:1}));cone.position.y=.85+i*.42;cone.castShadow=true;g.add(cone)}g.position.set(x,0,z);g.userData.decor=true;g.userData.tree=true;world.add(g)}
 function mat(color){return new THREE.MeshStandardMaterial({color,roughness:.85})}
 function addBuildingMesh(b,isCastle=false){
  const g=new THREE.Group();let base,roof;
@@ -154,10 +167,12 @@ function rebuildBuildings(){objects.forEach(o=>{if(world)world.remove(o)});objec
 function updateCamera(){if(!camera)return;camera.position.set(Math.sin(rot)*zoom,Math.max(7,camera.position.y||10),Math.cos(rot)*zoom);camera.lookAt(0,0,0)}
 function resize(){if(!renderer)return;const c=$('scene'),w=c.clientWidth,h=c.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();updateCamera()}
 function animate(){requestAnimationFrame(animate);if(renderer&&scene)renderer.render(scene,camera)}
+function groundPoint(clientX,clientY){if(!ground||!raycaster||!camera)return null;const rect=$('scene').getBoundingClientRect();mouse.x=((clientX-rect.left)/rect.width)*2-1;mouse.y=-((clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObject(ground,false);return hits.length?hits[0].point:null}
+function objectAt(clientX,clientY){if(!raycaster||!camera)return null;const rect=$('scene').getBoundingClientRect();mouse.x=((clientX-rect.left)/rect.width)*2-1;mouse.y=-((clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(mouse,camera);const targets=[...objects,...world.children.filter(o=>o.userData&&o.userData.tree)];const hits=raycaster.intersectObjects(targets,true);if(!hits.length)return null;let o=hits[0].object;while(o.parent&&!(o.userData.building||o.userData.tree))o=o.parent;return o.userData.building||o.userData.tree?o:null}
 function pick(e){const rect=$('scene').getBoundingClientRect();mouse.x=((e.clientX-rect.left)/rect.width)*2-1;mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(mouse,camera);
  // In modalità costruzione, controlla prima il terreno: un edificio sullo sfondo non deve intercettare il tocco.
  if(pendingBuild&&ground){const gh=raycaster.intersectObject(ground,false);if(gh.length){const pt=gh[0].point;placeBuilding(pendingBuild,pt.x,pt.z);return}}
- const hits=raycaster.intersectObjects(objects,true);if(hits.length){let o=hits[0].object;while(o.parent&&!o.userData.building)o=o.parent;if(o.userData.building){showBuilding(o.userData.building);return}}}
+ const targets=[...objects,...world.children.filter(o=>o.userData&&o.userData.tree)];const hits=raycaster.intersectObjects(targets,true);if(hits.length){let o=hits[0].object;while(o.parent&&!(o.userData.building||o.userData.tree))o=o.parent;if(o.userData.tree){if(confirm('Vuoi tagliare questo albero e ottenere 5 legname?')){world.remove(o);state.wood=Math.min(250,state.wood+5);state.xp+=2;checkLevel();log('Albero tagliato: +5 legname.');render();save(false)}return}if(o.userData.building){showBuilding(o.userData.building);return}}}
 function showBuilding(b){selected=b;$('modalTitle').textContent=b.name||typeName(b.type);$('modalDesc').textContent=b.type==='castle'?'Il cuore del tuo regno. Qui si prendono le decisioni più importanti.':`${typeName(b.type)} · Posizione: ${Math.round(b.x)}, ${Math.round(b.z)}. Ogni edificio contribuisce alla vita del regno.`;$('buildingName').value=b.name||'';$('modal').classList.add('open')}
 function typeName(t){return ({house:'Casa medievale',farm:'Fattoria',tavern:'Locanda',lumber:'Segheria',castle:'Castello',royal:'Casa del Re'})[t]||'Edificio'}
 function render(){
