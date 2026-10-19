@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medieval-Kingdom — prototipo</title>
+<style>
+:root{--bg:#151b19;--panel:#202a25;--panel2:#29352e;--gold:#e6c477;--cream:#f3ead5;--muted:#b8c2b4;--green:#6e9b67;--red:#d87965}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#29382e,#111714 72%);color:var(--cream);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 22px;border-bottom:1px solid #435045;background:#17201bd9;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:12px}.crest{width:42px;height:48px;display:grid;place-items:center;background:linear-gradient(145deg,#d6b45e,#8f672d);clip-path:polygon(8% 0,92% 0,88% 72%,50% 100%,12% 72%);font-size:24px;color:#271e11}.brand h1{margin:0;font:700 20px Georgia,serif;letter-spacing:.3px}.brand small{color:var(--muted)}
+button{border:1px solid #62725e;background:#344638;color:var(--cream);padding:9px 12px;border-radius:9px;font-weight:650;cursor:pointer;transition:.15s}button:hover{filter:brightness(1.15);transform:translateY(-1px)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.reset{background:transparent;border-color:#526056}
+main{max-width:1440px;margin:auto;padding:18px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px}.world{position:relative;min-height:560px;border:1px solid #4b5d4c;border-radius:18px;overflow:hidden;background:#385b3e;box-shadow:0 16px 45px #0005}.worldtop{position:absolute;left:16px;top:14px;z-index:2;pointer-events:none;text-shadow:0 2px 8px #172019}.worldtop h2{margin:0;font:700 25px Georgia,serif}.worldtop p{margin:4px 0;color:#e0e9d7;font-size:13px}.pill{display:inline-block;margin-top:7px;padding:5px 9px;background:#17231ccc;border:1px solid #74846b;border-radius:99px;font-size:12px}
+#scene{display:block;width:100%;height:100%;min-height:560px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}.sceneError{position:absolute;inset:90px 16px 65px;z-index:2;display:none;align-items:center;justify-content:center;text-align:center;padding:20px;background:#142019eF;border:1px solid #9b8050;border-radius:14px;color:#f3ead5;white-space:pre-wrap}.sceneError.show{display:flex}#scene:active{cursor:grabbing}.hint{position:absolute;bottom:12px;left:14px;padding:7px 10px;background:#142019d9;border:1px solid #586a53;border-radius:9px;font-size:12px;color:#d6e1d1;max-width:calc(100% - 28px)}.buildStatus{position:absolute;top:112px;left:14px;right:64px;z-index:3;display:none;padding:10px 12px;background:#142019ed;border:1px solid #c9a85e;border-radius:10px;color:#f3ead5;font-size:13px}.buildStatus.show{display:block}.zoomControls{position:absolute;right:10px;top:12px;z-index:3;display:flex;flex-direction:column;gap:6px}.zoomControls button{width:42px;height:42px;padding:0;font-size:22px;line-height:1;background:#142019e8;border-color:#7b8f6f;touch-action:manipulation}
+.sidebar{display:flex;flex-direction:column;gap:13px}.panel{background:linear-gradient(145deg,#26332b,#1d2722);border:1px solid #435345;border-radius:15px;padding:15px;box-shadow:0 10px 25px #0002}.panel h3{font:700 17px Georgia,serif;margin:0 0 12px;color:var(--gold)}.stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#151e19;border:1px solid #39493b;border-radius:11px;padding:10px}.stat .label{font-size:12px;color:var(--muted)}.stat strong{display:block;font-size:21px;margin-top:3px;font-variant-numeric:tabular-nums}.stat em{font-size:11px;color:#a6c69a;font-style:normal}
+.progress{height:8px;background:#111914;border-radius:10px;overflow:hidden;margin:7px 0}.progress span{height:100%;display:block;background:linear-gradient(90deg,#729a5c,#d5bd70);width:0;transition:width .25s}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions button{min-height:72px;text-align:left;background:#2c4031}.actions button span{display:block;font-size:12px;font-weight:400;color:#c1cfbf;margin-top:4px}.actions button b{font-size:14px}.actions .wide{grid-column:1/-1;min-height:52px;text-align:center}
+.feed{max-height:150px;overflow:auto;display:flex;flex-direction:column;gap:7px}.event{font-size:12px;color:#cbd5c6;border-left:2px solid #8d9f6e;padding:4px 0 4px 9px}.event:first-child{color:#f2e4bc}
+footer{max-width:1440px;margin:0 auto;padding:0 18px 20px;color:#8e9d8e;font-size:12px}
+.modal{position:fixed;inset:0;background:#0009;z-index:10;display:none;place-items:center;padding:18px}.modal.open{display:grid}.modalbox{width:min(440px,100%);background:#202b24;border:1px solid #6a7c5d;border-radius:16px;padding:20px;box-shadow:0 25px 80px #0008}.modalbox h2{font:700 24px Georgia,serif;color:var(--gold);margin:0 0 6px}.modalbox p{color:var(--muted);margin:0 0 14px}.modalbox input{width:100%;background:#111a15;color:var(--cream);border:1px solid #596957;border-radius:8px;padding:11px;margin:4px 0 12px;font:inherit}.modalbuttons{display:flex;gap:8px;justify-content:flex-end}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:10px}.world,#scene{min-height:450px}.sidebar{display:grid;grid-template-columns:1fr 1fr}.sidebar .widepanel{grid-column:1/-1}header{padding:12px}.brand h1{font-size:17px}}
+@media(max-width:540px){.sidebar{display:flex}.world,#scene{min-height:390px}.worldtop h2{font-size:21px}.brand small{display:none}.stats{grid-template-columns:1fr 1fr}.worldtop{left:12px;top:10px}.worldtop h2{font-size:20px}.worldtop p{font-size:11px}.hint{font-size:10px;max-width:90%;}.actions button{font-size:13px}.stat strong{font-size:19px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand"><div class="crest">♜</div><div><h1>Il Mio Regno</h1><small>Un piccolo regno, una grande storia</small></div></div>
+ <div style="display:flex;gap:8px"><button id="saveBtn" title="Salva i progressi">Salva</button><button class="reset" id="resetBtn">Nuova partita</button></div>
+</header>
+<main>
+ <section class="world">
+  <div class="worldtop"><h2 id="kingdomName">Valleverde</h2><p id="season">Primavera · Anno I</p><p id="gameClock">19 ottobre 1128 · Mattina</p><span class="pill" id="levelPill">Insediamento · Livello 1</span></div>
+  <canvas id="scene"></canvas><div id="sceneError" class="sceneError" role="status"></div><div id="buildStatus" class="buildStatus" role="status"></div>
+  <div class="zoomControls" aria-label="Controlli zoom"><button id="zoomIn" type="button" aria-label="Avvicina">+</button><button id="zoomOut" type="button" aria-label="Allontana">−</button></div>
+  <div class="hint">Trascina per ruotare · Pizzica/zoom per avvicinare · Tocca un edificio</div>
+ </section>
+ <aside class="sidebar">
+  <section class="panel"><h3>Le casse del regno</h3><div class="stats">
+   <div class="stat"><div class="label">💰 Oro</div><strong id="gold">120</strong><em id="goldRate">+0 / turno</em></div>
+   <div class="stat"><div class="label">🌲 Legname</div><strong id="wood">35</strong><em>Materiale da costruzione</em></div>
+   <div class="stat"><div class="label">🪨 Pietra</div><strong id="stone">20</strong><em>Per edifici robusti</em></div>
+   <div class="stat"><div class="label">🌾 Cibo</div><strong id="food">45</strong><em id="foodRate">Consumo: 0</em></div>
+   <div class="stat"><div class="label">👥 Popolazione</div><strong id="pop">8</strong><em id="housing">8 posti letto</em></div>
+   <div class="stat"><div class="label">😊 Felicità</div><strong id="happiness">76%</strong><em>Morale degli abitanti</em></div>
+  </div></section>
+  <section class="panel"><h3>Progresso del regno</h3><div style="display:flex;justify-content:space-between;font-size:12px"><span id="xpLabel">Reputazione</span><b id="xp">0 / 100</b></div><div class="progress"><span id="xpBar"></span></div><div style="font-size:12px;color:var(--muted)" id="nextGoal">Costruisci per far crescere il regno.</div></section>
+  <section class="panel"><h3>Costruisci</h3><div class="actions">
+   <button id="houseBtn"><b>🏠 Casa medievale</b><span>22 oro · 10 legname · 3 pietra</span></button>
+   <button id="farmBtn"><b>🌾 Fattoria</b><span>18 oro · 12 legname · 2 pietra</span></button>
+   <button id="tavernBtn"><b>🍺 Locanda</b><span>30 oro · 14 legname · 5 pietra</span></button>
+   <button id="lumberBtn"><b>🪓 Segheria</b><span>24 oro · 10 legname · 4 pietra</span></button><button class="wide reset" id="cancelBuildBtn" style="display:none">Annulla posizionamento</button>
+   <button id="roadBtn"><b>🟤 Strada in terra</b><span>1 oro · 3 legname per tratto</span></button><button class="wide" id="royalUpgradeBtn">👑 Casa del Re · migliora · 10 oro</button><button class="wide" id="expandBtn">🗺️ Espandi i confini · 75 oro</button><button class="wide" id="endTurnBtn">🌙 Concludi il turno</button>
+  </div></section>
+  <section class="panel"><h3>Raccogli risorse</h3><div class="actions">
+   <button id="gatherWoodBtn"><b>🪓 Taglia legna</b><span>+6 legname</span></button>
+   <button id="gatherStoneBtn"><b>⛏️ Cava pietra</b><span>+4 pietra</span></button>
+   <button id="gatherFoodBtn" class="wide"><b>🌾 Raccogli cibo</b><span>+8 cibo</span></button>
+  </div><p id="gatherInfo" style="font-size:12px;color:var(--muted);margin:10px 0 0">Ogni raccolta richiede 30 secondi. Giornate più lunghe e fino a 10 raccolte per risorsa al giorno. Se arriva sera, le raccolte in corso si mettono in pausa e riprendono il mattino successivo.</p></section>
+  <section class="panel widepanel"><h3>Cronache del regno</h3><div class="feed" id="feed"><div class="event">La prima bandiera sventola su Valleverde. Il regno attende le tue decisioni.</div></div></section>
+ </aside>
+</main>
+<footer>Prototipo giocabile locale · I progressi vengono salvati in questo browser. Nessun account e nessun dato inviato a un server.</footer>
+<div class="modal" id="modal"><div class="modalbox"><h2 id="modalTitle">Edificio</h2><p id="modalDesc"></p><label for="buildingName">Nome (facoltativo)</label><input id="buildingName" maxlength="30" placeholder="Es. Casa del mugnaio"><div class="modalbuttons"><button class="reset" id="closeModal">Chiudi</button><button id="nameBuilding">Assegna nome</button></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/three@0.160.0/build/three.min.js'"></script>
+<script>
+(() => {
+const $=id=>document.getElementById(id);
+const defaults={name:'Valleverde',gold:120,wood:35,stone:20,food:45,pop:8,happiness:76,xp:0,level:1,turn:1,houses:1,farms:0,taverns:0,lumbermills:0,buildings:[],roads:[],gatherUsed:{wood:0,stone:0,food:0},mapRadius:13,log:['La prima bandiera sventola su Valleverde. Il regno attende le tue decisioni.']};
+let state={...defaults,royalLevel:1}; let scene,camera,renderer,world,raycaster,mouse,ground,wallGroup,terrainGroup,riverMesh;let objects=[];let selected=null;let drag=false,down={x:0,y:0,rot:.72},rot=.72,zoom=25;let pointerMoved=false;let pendingBuild=null;const activeGathers={wood:null,stone:null,food:null};const gatherIntervals={wood:null,stone:null,food:null};const gatherTimers={wood:0,stone:0,food:0};let daySeconds=0,clockInterval=null;const DAY_LENGTH=240,EVENING_START=190;let gameDate={day:19,month:10,year:1128};
+function log(msg){state.log.unshift(msg);state.log=state.log.slice(0,12);renderLog()}
+function renderLog(){$('feed').innerHTML=state.log.map(x=>`<div class="event">${escapeHtml(x)}</div>`).join('')}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function show3DError(message){const box=$('sceneError');if(box){box.textContent=message+'\n\nI pulsanti delle risorse e delle costruzioni restano disponibili, ma la scena 3D non è partita.';box.classList.add('show');}}
+function rebuildLandscape(radius){
+   while(terrainGroup.children.length){const child=terrainGroup.children.pop();terrainGroup.remove(child);if(child.geometry)child.geometry.dispose();}
+   const extent=radius+13;
+   for(let i=0;i<Math.max(24,Math.floor(radius*2.4));i++){let r=1.5+Math.random()*3.1;const hill=new THREE.Mesh(new THREE.SphereGeometry(r,16,10),new THREE.MeshStandardMaterial({color:['#72985b','#7ea564','#5e824d'][i%3],roughness:1}));hill.scale.y=.32+Math.random()*.12;let x=(Math.random()*2-1)*extent,z=(Math.random()*2-1)*extent;if(Math.abs(x)<radius*.62&&Math.abs(z)<radius*.62){x+=(x<0?-1:1)*(radius*.72+4)}if(Math.hypot(x,z)<radius*.7){x+=radius+5}if((state.buildings||[]).some(b=>Math.hypot(b.x-x,b.z-z)<4.2)){x+=5}hill.position.set(x,-.45,z);hill.receiveShadow=true;hill.userData.decor=true;terrainGroup.add(hill)}
+   if(riverMesh){terrainGroup.remove(riverMesh);if(riverMesh.geometry)riverMesh.geometry.dispose()}
+   riverMesh=new THREE.Mesh(new THREE.BoxGeometry(2.5,.04,radius*2+28),new THREE.MeshStandardMaterial({color:'#4c9eb7',roughness:.25,metalness:.08}));riverMesh.position.set(-radius*.62,-.045,0);riverMesh.rotation.y=.12;riverMesh.userData.decor=true;terrainGroup.add(riverMesh);
+ }
+function init3D(){
+ const canvas=$('scene');
+ if(typeof THREE==='undefined'){ show3DError('Il motore 3D non è stato caricato.\nControlla la connessione internet e ricarica la pagina.'); return; }
+ scene=new THREE.Scene();scene.background=new THREE.Color('#8ab77e');scene.fog=null;
+ camera=new THREE.PerspectiveCamera(42,1,.1,100);renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ scene.add(new THREE.HemisphereLight(0xdcebd9,0x3a4b32,2.0));const sun=new THREE.DirectionalLight(0xffe2ae,3);sun.position.set(-8,14,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+ world=new THREE.Group();scene.add(world);raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();
+ const plane=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:'#668c55',roughness:1}));plane.rotation.x=-Math.PI/2;plane.position.y=-.15;plane.receiveShadow=true;plane.userData.ground=true;ground=plane;world.add(plane);
+ // Paesaggio: colline e fiume crescono insieme ai confini del regno.
+ terrainGroup=new THREE.Group();world.add(terrainGroup);
+
+ rebuildLandscape(state.mapRadius||13);
+ // road strips
+ addRoad(0,0,0,24);addRoad(0,0,Math.PI/2,19);rebuildRoads();
+ // plaza
+ const plaza=new THREE.Mesh(new THREE.CylinderGeometry(3.5,3.5,.12,32),new THREE.MeshStandardMaterial({color:'#b9aa83',roughness:1}));plaza.position.set(0,.02,0);plaza.userData.decor=true;world.add(plaza);
+ // Cinta muraria dinamica: si allarga quando il sovrano compra nuovo territorio.
+ drawWalls(state.mapRadius||13);
+ // trees on outskirts
+ for(let i=0;i<45;i++){let x=(Math.random()-.5)*32,z=(Math.random()-.5)*28;if(Math.abs(x)<5&&Math.abs(z)<5)continue;if(x< -6&&x>-10)continue;addTree(x,z)}
+ addBuildingMesh({type:'castle',x:0,z:-7,name:'Castello di Valleverde'},true);
+ addBuildingMesh({type:'royal',x:0,z:0,name:'Casa del Re',level:state.royalLevel||1});
+ rebuildBuildings();resize();animate();
+ canvas.addEventListener('pointerdown',e=>{drag=true;pointerMoved=false;down={x:e.clientX,y:e.clientY,rot};canvas.setPointerCapture(e.pointerId)});
+ canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.abs(dx)+Math.abs(dy)>4)pointerMoved=true;rot=down.rot+dx*.008;camera.position.y=Math.max(6,Math.min(22, camera.position.y+dy*.025));updateCamera()});
+ canvas.addEventListener('pointerup',e=>{drag=false;if(!pointerMoved)pick(e)});
+ canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(11,Math.min(42,zoom+Math.sign(e.deltaY)*1.8));updateCamera()},{passive:false});
+ window.addEventListener('resize',resize);
+}
+function drawWalls(radius){
+ if(!world)return;if(wallGroup)world.remove(wallGroup);wallGroup=new THREE.Group();const wallMat=mat('#8c8b7d');const r=radius;
+ for(const [x,z,w,d] of [[0,-r,2*r+1,.65],[0,r,2*r+1,.65],[-r,0,.65,2*r],[r,0,.65,2*r]]){const wall=new THREE.Mesh(new THREE.BoxGeometry(w,d===.65?1.25:1.25,d),wallMat);wall.position.set(x,.55,z);wall.castShadow=true;wall.receiveShadow=true;wallGroup.add(wall);const count=Math.floor((w>d?w:d)/1.4);for(let i=0;i<count;i++){const xx=x+(w>d?-w/2+i*1.4:0),zz=z+(d>=w?-d/2+i*1.4:0);const merlon=new THREE.Mesh(new THREE.BoxGeometry(w>d?.42:.65,.28,w>d?.65:.42),wallMat);merlon.position.set(xx,1.3,zz);wallGroup.add(merlon)}}
+ for(const [x,z] of [[-r,-r],[r,-r],[-r,r],[r,r]]){const tower=new THREE.Mesh(new THREE.CylinderGeometry(.8,.95,2.5,8),wallMat);tower.position.set(x,1.2,z);tower.castShadow=true;wallGroup.add(tower);const cap=new THREE.Mesh(new THREE.ConeGeometry(.9,1,4),mat('#713e32'));cap.position.set(x,2.95,z);cap.rotation.y=Math.PI/4;wallGroup.add(cap)}world.add(wallGroup);
+}
+function addRoad(x,z,angle=0,len=1.2,persistent=false){const m=new THREE.Mesh(new THREE.BoxGeometry(1.2,.04,len),new THREE.MeshStandardMaterial({color:'#a99772',roughness:1}));m.position.set(x,.015,z);m.rotation.y=angle;m.userData.decor=true;m.userData.road=persistent;world.add(m);return m}
+function rebuildRoads(){if(!world)return;world.children.filter(o=>o.userData&&o.userData.road===true).forEach(o=>world.remove(o));(state.roads||[]).forEach(r=>addRoad(r.x,r.z,r.angle||0,1.2,true))}
+function addTree(x,z){const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,.8,7),new THREE.MeshStandardMaterial({color:'#65452b'}));trunk.position.y=.35;trunk.castShadow=true;g.add(trunk);for(let i=0;i<3;i++){const cone=new THREE.Mesh(new THREE.ConeGeometry(.65-i*.1,1.1,7),new THREE.MeshStandardMaterial({color:['#315b3b','#3f7045','#477c49'][i],roughness:1}));cone.position.y=.85+i*.42;cone.castShadow=true;g.add(cone)}g.position.set(x,0,z);g.userData.decor=true;world.add(g)}
+function mat(color){return new THREE.MeshStandardMaterial({color,roughness:.85})}
+function addBuildingMesh(b,isCastle=false){
+ const g=new THREE.Group();let base,roof;
+ if(isCastle||b.type==='castle'){
+  base=new THREE.Mesh(new THREE.BoxGeometry(3.3,2.2,2.8),mat('#b9b7a4'));base.position.y=1.1;base.castShadow=true;base.receiveShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.35,1.35,4),mat('#596b70'));roof.position.set(0,2.85,0);roof.rotation.y=Math.PI/4;roof.castShadow=true;g.add(roof);
+  for(const [x,z] of [[-1.4,-1.1],[1.4,-1.1],[-1.4,1.1],[1.4,1.1]]){const t=new THREE.Mesh(new THREE.BoxGeometry(.65,3,.65),mat('#c8c5ae'));t.position.set(x,1.5,z);t.castShadow=true;g.add(t);const tr=new THREE.Mesh(new THREE.ConeGeometry(.5,.8,4),mat('#6c3d35'));tr.position.set(x,3.4,z);tr.rotation.y=Math.PI/4;g.add(tr)}
+ } else if(b.type==='royal') {
+  const lv=b.level||state.royalLevel||1;const size=2.15+(lv-1)*.22;
+  base=new THREE.Mesh(new THREE.BoxGeometry(size,1.55+(lv-1)*.12,size*.85),mat(lv>=4?'#d6c9a4':'#c5b58f'));base.position.y=base.geometry.parameters.height/2;base.castShadow=true;base.receiveShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(size*.72,1.25+(lv-1)*.12,4),mat(lv>=3?'#6c3430':'#8a4c35'));roof.position.y=base.geometry.parameters.height+0.55;roof.rotation.y=Math.PI/4;roof.scale.set(1,.82,.82);roof.castShadow=true;g.add(roof);
+  const banner=new THREE.Mesh(new THREE.BoxGeometry(.08,1.05,.06),mat('#d9b65f'));banner.position.set(size*.42,1.75,size*.42);g.add(banner);
+ } else if(b.type==='farm'){
+  base=new THREE.Mesh(new THREE.BoxGeometry(2.3,1.25,1.8),mat('#b78b56'));base.position.y=.65;base.castShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.65,1.15,4),mat('#8e5c38'));roof.position.y=1.75;roof.rotation.y=Math.PI/4;roof.scale.set(1,.8,.8);g.add(roof);
+  for(let i=0;i<4;i++){const row=new THREE.Mesh(new THREE.BoxGeometry(.28,.08,3),mat('#9ab65c'));row.position.set(-1.7+i*.4,.04,2.1);g.add(row)}
+ } else if(b.type==='tavern'){
+  base=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.55,1.9),mat('#b98a5a'));base.position.y=.78;base.castShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.8,1.2,4),mat('#6c3830'));roof.position.y=1.95;roof.rotation.y=Math.PI/4;roof.scale.set(1,.8,.75);g.add(roof);
+  const sign=new THREE.Mesh(new THREE.BoxGeometry(.55,.35,.06),mat('#e3c779'));sign.position.set(0,1.05,1);g.add(sign);
+ } else if(b.type==='lumber'){
+  base=new THREE.Mesh(new THREE.BoxGeometry(2.3,1.2,1.8),mat('#8c6544'));base.position.y=.6;base.castShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.7,1.1,4),mat('#56664b'));roof.position.y=1.65;roof.rotation.y=Math.PI/4;roof.scale.set(1,.8,.8);g.add(roof);
+  for(let i=0;i<3;i++){const logm=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,1.4,8),mat('#8b5c35'));logm.rotation.z=Math.PI/2;logm.position.set(1.3,.18+i*.18,1);g.add(logm)}
+ } else {
+  base=new THREE.Mesh(new THREE.BoxGeometry(1.8,1.35,1.6),mat('#d1b58a'));base.position.y=.68;base.castShadow=true;base.receiveShadow=true;g.add(base);
+  roof=new THREE.Mesh(new THREE.ConeGeometry(1.45,1.15,4),mat(['#8b4e3c','#586b50','#66517c','#9b713b'][b.variant%4]));roof.position.y=1.9;roof.rotation.y=Math.PI/4;roof.scale.set(1,.85,.8);roof.castShadow=true;g.add(roof);
+ }
+ // door and windows
+ const door=new THREE.Mesh(new THREE.BoxGeometry(.32,.62,.07),mat('#53372a'));door.position.set(.15,.34,base.geometry.parameters.depth/2+.045);g.add(door);
+ for(const x of [-.48,.48]){const win=new THREE.Mesh(new THREE.BoxGeometry(.22,.24,.06),mat('#6c9ca1'));win.position.set(x,.92,base.geometry.parameters.depth/2+.05);g.add(win)}
+ // travi a vista e camino per un aspetto più medievale
+ if(!isCastle&&b.type!=='castle'&&b.type!=='royal'){for(const x of [-.78,.78]){const beam=new THREE.Mesh(new THREE.BoxGeometry(.09,1.25,.08),mat('#553b29'));beam.position.set(x,.7,base.geometry.parameters.depth/2+.08);g.add(beam)}const cross=new THREE.Mesh(new THREE.BoxGeometry(1.7,.08,.08),mat('#553b29'));cross.position.set(0,1.25,base.geometry.parameters.depth/2+.08);g.add(cross);const chimney=new THREE.Mesh(new THREE.BoxGeometry(.28,.65,.28),mat('#75685b'));chimney.position.set(-.62,2.05,-.28);g.add(chimney)}
+ g.position.set(b.x,0,b.z);g.userData.building=b;g.userData.decor=false;world.add(g);objects.push(g);return g;
+}
+function rebuildBuildings(){objects.forEach(o=>{if(world)world.remove(o)});objects=[];if(world)state.buildings.forEach(b=>addBuildingMesh(b));updateCamera()}
+function updateCamera(){if(!camera)return;camera.position.set(Math.sin(rot)*zoom,Math.max(7,camera.position.y||10),Math.cos(rot)*zoom);camera.lookAt(0,0,0)}
+function resize(){if(!renderer)return;const c=$('scene'),w=c.clientWidth,h=c.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();updateCamera()}
+function animate(){requestAnimationFrame(animate);if(renderer&&scene)renderer.render(scene,camera)}
+function pick(e){const rect=$('scene').getBoundingClientRect();mouse.x=((e.clientX-rect.left)/rect.width)*2-1;mouse.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(mouse,camera);
+ // In modalità costruzione, controlla prima il terreno: un edificio sullo sfondo non deve intercettare il tocco.
+ if(pendingBuild&&ground){const gh=raycaster.intersectObject(ground,false);if(gh.length){const pt=gh[0].point;placeBuilding(pendingBuild,pt.x,pt.z);return}}
+ const hits=raycaster.intersectObjects(objects,true);if(hits.length){let o=hits[0].object;while(o.parent&&!o.userData.building)o=o.parent;if(o.userData.building){showBuilding(o.userData.building);return}}}
+function showBuilding(b){selected=b;$('modalTitle').textContent=b.name||typeName(b.type);$('modalDesc').textContent=b.type==='castle'?'Il cuore del tuo regno. Qui si prendono le decisioni più importanti.':`${typeName(b.type)} · Posizione: ${Math.round(b.x)}, ${Math.round(b.z)}. Ogni edificio contribuisce alla vita del regno.`;$('buildingName').value=b.name||'';$('modal').classList.add('open')}
+function typeName(t){return ({house:'Casa medievale',farm:'Fattoria',tavern:'Locanda',lumber:'Segheria',castle:'Castello',royal:'Casa del Re'})[t]||'Edificio'}
+function render(){
+ for(const k of ['gold','wood','stone','food','pop','happiness'])$(k).textContent=state[k].toLocaleString('it-IT');
+ $('goldRate').textContent=`+${state.farms*2+state.taverns*5+state.lumbermills*2} / turno`;
+ $('foodRate').textContent=`Consumo: ${state.pop} / turno`;
+ $('housing').textContent=`${state.houses*4+4} posti letto`;
+ $('xp').textContent=`${state.xp} / ${state.level*80}`;$('xpBar').style.width=Math.min(100,state.xp/(state.level*80)*100)+'%';
+ $('levelPill').textContent=`${levelName()} · Livello ${state.level}`;$('season').textContent=`${['Primavera','Estate','Autunno','Inverno'][Math.floor((state.turn-1)/30)%4]} · Giorno ${(state.turn-1)%30+1} · Anno ${Math.floor((state.turn-1)/120)+1}`;
+ $('nextGoal').textContent=state.xp>=state.level*80?'Un nuovo livello ti aspetta: concludi un turno!':`Mancano ${state.level*80-state.xp} punti reputazione al prossimo livello.`;
+ $('houseBtn').disabled=state.gold<22||state.wood<10||state.stone<3;
+ $('farmBtn').disabled=state.gold<18||state.wood<12||state.stone<2;$('tavernBtn').disabled=state.gold<30||state.wood<14||state.stone<5;$('lumberBtn').disabled=state.gold<24||state.wood<10||state.stone<4;
+ $('roadBtn').disabled=state.gold<1||state.wood<3;
+ ['wood','stone','food'].forEach(k=>{const b=$({wood:'gatherWoodBtn',stone:'gatherStoneBtn',food:'gatherFoodBtn'}[k]);b.disabled=!!activeGathers[k]||((state.gatherUsed||{})[k]||0)>=10||daySeconds>=EVENING_START;});
+ const royalCost=10+(Math.max(1,state.royalLevel||1)-1)*10;$('royalUpgradeBtn').disabled=state.gold<royalCost||((state.royalLevel||1)>=6);$('royalUpgradeBtn').textContent=(state.royalLevel||1)>=6?'👑 Casa del Re · livello massimo':`👑 Casa del Re · livello ${state.royalLevel||1} → ${(state.royalLevel||1)+1} · ${royalCost} oro`;
+ const expansionCost=75+Math.max(0,((state.mapRadius||13)-13)/4)*20; $('expandBtn').disabled=state.gold<expansionCost||((state.mapRadius||13)>=25); $('expandBtn').textContent=(state.mapRadius||13)>=25?'🗺️ Confini massimi raggiunti':`🗺️ Espandi i confini · ${expansionCost} oro`;
+ $('cancelBuildBtn').style.display=pendingBuild?'block':'none';
+}
+function levelName(){return ['','Insediamento','Borgo','Villaggio fortificato','Cittadina','Città','Capitale'][Math.min(state.level,6)]||'Regno leggendario'}
+function costsFor(type){return ({house:[22,10,3],farm:[18,12,2],tavern:[30,14,5],lumber:[24,10,4]})[type]}
+function startBuild(type){const c=costsFor(type);if(!c)return;if(state.gold<c[0]||state.wood<c[1]||state.stone<c[2]){const missing=[];if(state.gold<c[0])missing.push(`${c[0]-state.gold} oro`);if(state.wood<c[1])missing.push(`${c[1]-state.wood} legname`);if(state.stone<c[2])missing.push(`${c[2]-state.stone} pietra`);log(`Risorse insufficienti: mancano ${missing.join(', ')}.`);return}pendingBuild=type;$('buildStatus').textContent=`Posizionamento: ${typeName(type)}. Tocca un punto libero nel villaggio; le risorse verranno scalate solo quando confermi la posizione.`;$('buildStatus').classList.add('show');$('cancelBuildBtn').style.display='block';log(`Scegli dove costruire: ${typeName(type)}.`);render()}
+function placeBuilding(type,x,z){if(type==='road'){if(Math.abs(x)>(state.mapRadius||13)-1||Math.abs(z)>(state.mapRadius||13)-1){log('La strada deve restare entro i confini.');return}const rx=Math.round(x),rz=Math.round(z);const i=(state.roads||[]).findIndex(r=>Math.hypot(r.x-rx,r.z-rz)<.6);if(i>=0){state.roads.splice(i,1);log('Hai rimosso un tratto di strada.');}else{if(state.gold<1||state.wood<3){log('Per costruire una strada servono 1 oro e 3 legname.');return}state.gold-=1;state.wood-=3;state.roads=state.roads||[];state.roads.push({x:rx,z:rz,angle:0});state.xp+=3;checkLevel();log('Hai costruito un tratto di strada in terra. Tocca un tratto già posato per rimuoverlo.')}pendingBuild=null;$('buildStatus').classList.remove('show');rebuildRoads();render();save(false);return}if(Math.hypot(x,z)<4.4){log('La piazza centrale deve restare libera. Scegli un punto più lontano.');return}const radius=state.mapRadius||13;if(Math.abs(x)>radius-1||Math.abs(z)>radius-1){log('Sei fuori dai confini del regno. Espandi il territorio per costruire più lontano.');return}if(Math.hypot(x,z+7)<3.2){log('Non puoi costruire sopra il castello. Scegli un altro punto.');return}if(state.buildings.some(b=>Math.hypot(b.x-x,b.z-z)<2.8)){log('Qui c’è già un edificio. Scegli un punto libero.');return}build(type,x,z)}
+function build(type,x,z){const costs=costsFor(type);if(!costs)return;if(state.gold<costs[0]||state.wood<costs[1]||state.stone<costs[2]){pendingBuild=null;$('buildStatus').classList.remove('show');render();return}state.gold-=costs[0];state.wood-=costs[1];state.stone-=costs[2];const b={type,x,z,name:'',variant:Math.floor(Math.random()*4)};state.buildings.push(b);if(type==='house')state.houses++;if(type==='farm')state.farms++;if(type==='tavern')state.taverns++;if(type==='lumber')state.lumbermills++;state.xp+=25;if(world)addBuildingMesh(b);pendingBuild=null;$('buildStatus').classList.remove('show');log(`${typeName(type)} costruita nella posizione scelta. Il regno fa un passo avanti!`);checkLevel();render();save(false)}
+function spiralPosition(n){const a=n*2.399963;const r=4.5+Math.sqrt(n+1)*1.65;return{x:Math.cos(a)*r,z:Math.sin(a)*r+1}}
+function checkLevel(){while(state.xp>=state.level*80){state.xp-=state.level*80;state.level++;state.gold+=15;state.happiness=Math.min(100,state.happiness+3);log(`🎉 Il regno è cresciuto: ${levelName()}! La corona concede 15 monete.`)}}
+function resumeGather(kind){
+ if(!activeGathers[kind]||gatherIntervals[kind]||daySeconds>=EVENING_START)return;
+ const btn=$({wood:'gatherWoodBtn',stone:'gatherStoneBtn',food:'gatherFoodBtn'}[kind]);
+ const rewards={wood:{amount:6,key:'wood',label:'Hai raccolto 6 unità di legname.'},stone:{amount:4,key:'stone',label:'Hai estratto 4 unità di pietra.'},food:{amount:8,key:'food',label:'Hai raccolto 8 unità di cibo.'}};const r=rewards[kind];
+ const update=()=>{btn.innerHTML=`<b>⏳ Raccolta in corso</b><span>${gatherTimers[kind]} secondi rimanenti</span>`};update();
+ gatherIntervals[kind]=setInterval(()=>{
+  if(daySeconds>=EVENING_START){clearInterval(gatherIntervals[kind]);gatherIntervals[kind]=null;btn.innerHTML=`<b>⏸️ Raccolta in pausa</b><span>${gatherTimers[kind]} secondi al mattino</span>`;return}
+  gatherTimers[kind]--;if(gatherTimers[kind]>0){update();return}
+  clearInterval(gatherIntervals[kind]);gatherIntervals[kind]=null;activeGathers[kind]=null;btn.innerHTML=btn.dataset.original||btn.innerHTML;
+  const bonus=kind==='wood'?Math.min(4,(state.lumbermills||0)):0;const amount=r.amount+bonus;state[r.key]=Math.min(250,state[r.key]+amount);state.gatherUsed[kind]=(state.gatherUsed[kind]||0)+1;state.xp+=5;checkLevel();log((kind==='wood'&&bonus?`La segheria aumenta la resa: `:'')+r.label.replace(String(r.amount),String(amount))+` Raccolte oggi: ${state.gatherUsed[kind]}/10. +5 XP.`);render();save(false);
+ },1000);
+}
+function endTurn(){
+ // Le raccolte in corso vengono sospese, non annullate: ripartono al nuovo mattino.
+ for(const k of ['wood','stone','food']){if(gatherIntervals[k]){clearInterval(gatherIntervals[k]);gatherIntervals[k]=null;}if(activeGathers[k]){const btn=$({wood:'gatherWoodBtn',stone:'gatherStoneBtn',food:'gatherFoodBtn'}[k]);btn.innerHTML=`<b>⏸️ Raccolta in pausa</b><span>${gatherTimers[k]} secondi al mattino</span>`;}}
+ daySeconds=0;gameDate.day++;const monthDays=[31,28,31,30,31,30,31,31,30,31,30,31];if(gameDate.day>monthDays[gameDate.month-1]){gameDate.day=1;gameDate.month++;if(gameDate.month>12){gameDate.month=1;gameDate.year++}}
+ state.turn++;state.gatherUsed={wood:0,stone:0,food:0};
+ const gross=Math.floor(state.pop*.8+state.happiness/25+state.farms*2+state.taverns*3+state.lumbermills*2);const upkeep=Math.ceil(state.pop*.55)+(state.houses-1)+state.farms+state.taverns+state.lumbermills;const income=gross-upkeep;state.gold=Math.max(0,Math.min(9999,state.gold+income));
+ const foodNet=state.farms*8-state.pop;state.food+=foodNet;state.wood+=(state.lumbermills||0)*4;
+ if(state.food<0){state.happiness=Math.max(10,state.happiness-8);state.food=0;log('Le dispense sono vuote. La felicità degli abitanti diminuisce.')}else{state.happiness=Math.min(100,state.happiness+1)}
+ state.food=Math.min(250,state.food);state.wood=Math.min(250,state.wood);state.stone=Math.min(250,state.stone);
+ if(state.turn%3===0&&state.pop<state.houses*4+4&&state.food>=10&&state.happiness>=55){state.pop++;state.food-=5;log('Una nuova famiglia si è stabilita a Valleverde. La popolazione cresce!')}
+ state.xp+=8+(state.farms||0)*2+(state.taverns||0)*2;checkLevel();startGameClock();for(const k of ['wood','stone','food'])resumeGather(k);log(`È iniziato un nuovo giorno. Bilancio: ${income>=0?'+':''}${income} oro (entrate ${gross}, mantenimento ${upkeep}); raccolto netto: ${foodNet} cibo.`);render();save(false)
+}
+function gatherResource(kind){
+ if(daySeconds>=EVENING_START){log('È sera: le nuove raccolte riprendono dal mattino.');return}
+ if(activeGathers[kind]){log('Questa raccolta è già in corso.');return}
+ state.gatherUsed=state.gatherUsed||{wood:0,stone:0,food:0};if((state.gatherUsed[kind]||0)>=10){log(`Hai raggiunto il limite giornaliero di 10 raccolte per ${kind==='wood'?'il legname':kind==='stone'?'la pietra':'il cibo'}.`);return}
+ activeGathers[kind]=true;gatherTimers[kind]=30;const btn=$({wood:'gatherWoodBtn',stone:'gatherStoneBtn',food:'gatherFoodBtn'}[kind]);if(!btn.dataset.original)btn.dataset.original=btn.innerHTML;resumeGather(kind);render();
+}
+function expandTerritory(){const radius=state.mapRadius||13;if(radius>=25){log('Hai già raggiunto i confini massimi disponibili in questa versione.');return}const cost=75+Math.max(0,(radius-13)/4)*20;if(state.gold<cost){log(`Per espandere i confini servono ${cost} monete d’oro.`);return}state.gold-=cost;state.mapRadius=Math.min(25,radius+4);if(world){drawWalls(state.mapRadius);if(typeof rebuildLandscape==='function')rebuildLandscape(state.mapRadius);rebuildRoads()}log(`I confini si ampliano: mura, fiume e colline si estendono con il territorio! Ora puoi costruire fino a ${state.mapRadius} unità dal centro.`);render();save(false)}
+function upgradeRoyalHouse(){const level=state.royalLevel||1;if(level>=6){log('La Casa del Re ha già raggiunto il livello massimo.');return}const cost=10+(level-1)*10;if(state.gold<cost){log(`Per migliorare la Casa del Re servono ${cost} monete d’oro.`);return}state.gold-=cost;state.royalLevel=level+1;if(world){const old=objects.find(o=>o.userData.building&&o.userData.building.type==='royal');if(old){world.remove(old);objects=objects.filter(o=>o!==old)}addBuildingMesh({type:'royal',x:0,z:0,name:'Casa del Re',level:state.royalLevel})}state.xp+=10;checkLevel();log(`La Casa del Re è stata migliorata al livello ${state.royalLevel}. Costo: ${cost} oro.`);render();save(false)}
+function clockLabel(){if(daySeconds>=220)return 'Notte';if(daySeconds>=EVENING_START)return 'Sera';if(daySeconds>=100)return 'Pomeriggio';return 'Mattina'}
+function renderClock(){const months=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];$('gameClock').textContent=`${gameDate.day} ${months[gameDate.month-1]} ${gameDate.year} · ${clockLabel()}${daySeconds>=DAY_LENGTH?' · Giorno concluso':''}`;if(scene){const night=daySeconds>=220;const evening=daySeconds>=EVENING_START;const color=night?'#27334b':evening?'#d6a078':daySeconds>=40?'#a8cbd4':'#8ab77e';scene.background=new THREE.Color(color);scene.fog=null}}
+function startGameClock(){if(clockInterval)clearInterval(clockInterval);clockInterval=setInterval(()=>{if(daySeconds<DAY_LENGTH)daySeconds++;renderClock();if(daySeconds===EVENING_START){log('Il sole sta tramontando: le nuove raccolte si fermano; quelle in corso sono in pausa.');for(const k of ['wood','stone','food'])if(activeGathers[k]){if(gatherIntervals[k]){clearInterval(gatherIntervals[k]);gatherIntervals[k]=null;}const b=$({wood:'gatherWoodBtn',stone:'gatherStoneBtn',food:'gatherFoodBtn'}[k]);b.innerHTML=`<b>⏸️ Raccolta in pausa</b><span>${gatherTimers[k]} secondi al mattino</span>`;}render();}if(daySeconds===DAY_LENGTH)log('È notte. Concludi il turno per iniziare il giorno successivo.')},1000);renderClock()}
+function save(show=true){try{localStorage.setItem('ilMioRegnoSave',JSON.stringify(state));if(show){$('saveBtn').textContent='Salvato ✓';setTimeout(()=>$('saveBtn').textContent='Salva',1200);log('I progressi del regno sono stati salvati in questo browser.')}}catch(e){if(show)alert('Non è stato possibile salvare in questo browser.')}}
+function load(){try{const s=localStorage.getItem('ilMioRegnoSave');if(s){state={...defaults,...JSON.parse(s)};state.royalLevel=state.royalLevel||1;state.roads=state.roads||[];state.gatherUsed={...defaults.gatherUsed,...(state.gatherUsed||{})}}}catch(e){state={...defaults}}}
+function reset(){if(!confirm('Vuoi iniziare una nuova partita? I progressi salvati in questo browser verranno cancellati.'))return;localStorage.removeItem('ilMioRegnoSave');state={...defaults,buildings:[],roads:[],gatherUsed:{wood:0,stone:0,food:0},mapRadius:13,log:[defaults.log[0]]};state.buildings=[];rebuildBuildings();render();renderLog();save(false)}
+$('zoomIn').onclick=()=>{zoom=Math.max(11,zoom-2.2);updateCamera()};$('zoomOut').onclick=()=>{zoom=Math.min(42,zoom+2.2);updateCamera()};$('houseBtn').onclick=()=>startBuild('house');$('farmBtn').onclick=()=>startBuild('farm');$('tavernBtn').onclick=()=>startBuild('tavern');$('lumberBtn').onclick=()=>startBuild('lumber');$('roadBtn').onclick=()=>{if(state.gold<1||state.wood<3){log('Per costruire una strada servono 1 oro e 3 legname.');return}pendingBuild='road';$('buildStatus').textContent='Posizionamento strada: tocca un punto libero per aggiungere un tratto. Tocca un tratto esistente per rimuoverlo.';$('buildStatus').classList.add('show');render()};$('cancelBuildBtn').onclick=()=>{pendingBuild=null;$('buildStatus').classList.remove('show');render();log('Posizionamento annullato.')};$('endTurnBtn').onclick=endTurn;$('expandBtn').onclick=expandTerritory;$('royalUpgradeBtn').onclick=upgradeRoyalHouse;$('gatherWoodBtn').onclick=()=>gatherResource('wood');$('gatherStoneBtn').onclick=()=>gatherResource('stone');$('gatherFoodBtn').onclick=()=>gatherResource('food');$('saveBtn').onclick=()=>save(true);$('resetBtn').onclick=reset;
+$('closeModal').onclick=()=>$('modal').classList.remove('open');$('modal').onclick=e=>{if(e.target===$('modal'))$('modal').classList.remove('open')};
+$('nameBuilding').onclick=()=>{if(!selected)return;const name=$('buildingName').value.trim();selected.name=name||typeName(selected.type);const o=objects.find(o=>o.userData.building===selected);if(o)o.userData.building.name=selected.name;log(`Hai dato un nome a un edificio: ${selected.name}.`);$('modalTitle').textContent=selected.name;$('modal').classList.remove('open');save(false)};
+load();if(!state.buildings)state.buildings=[];render();renderLog();startGameClock();try{init3D()}catch(e){show3DError('Errore durante l’avvio 3D: '+(e&&e.message?e.message:String(e)));}
+})();
+</script>
+</body></html>
